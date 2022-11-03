@@ -2,7 +2,7 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from ringtones import initJokes
+from model_jokes import initJokes
 
 """
 These object can be used throughout project.
