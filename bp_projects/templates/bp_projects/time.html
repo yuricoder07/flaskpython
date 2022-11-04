@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>World Clock App</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+        body {
+            margin: 0px;
+            padding: 0px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        #mainBlock {
+            background: black;
+            padding: 100px;
+            color: #fff;
+            border-radius: 20px;
+            font-size: 40px;
+        }
+        
+        select {
+            font-family: 'Poppins', sans-serif;
+            padding: 10px;
+            color: #fff;
+            background: black;
+            outline: none;
+            border: none;
+            border-radius: 10px;
+        }
+        
+        #seperator {
+            margin-top: 20px;
+            height: 1px;
+            width: 40%;
+            min-width: 400px;
+            background: black
+        }
+        
+        button {
+            outline: none;
+            border: none;
+            padding: 15px;
+            margin-left: 10px;
+            margin-right: 10px;
+            background: black;
+            color: #fff;
+            font-size: 20px;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 20px;
+        }
+        
+        #timeInput {
+            outline: none;
+            background: none;
+            color: black;
+            padding: 20px;
+            border-radius: 20px;
+            fill: black;
+            font-size: 20px;
+            border: 2px solid black;
+        }
+        
+        button:hover {
+            background: #fff;
+            color: black;
+        }
+        
+        #stopAlarm {
+            background: red;
+        }
+        
+        #opace {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <section id="clock_page">
+
+        <div id="mainBlock">
+
+            <h1 id="clock">00:00:00</h1>
+
+
+        </div>
+        <section>
+
+            <h1>Timezone: </h1>
+
+            <select id="timezoneChoice" title="Timezone" onchange="timezone_changed(this);"></select>
+
+        </section>
+
+    </section>
+
+    <section id="alarm_page" style="display: none;">
+
+        <h1>Alarm: </h1>
+
+        <input type="time" id="timeInput">
+
+        <p id="opace">24 HOUR FORMAT</p>
+
+        <button onclick="set_alarm();">Set Alarm</button>
+
+        <button onclick="clear_alarms();" id="clearAlarmsButton">Clear 0 Alarm(s)</button>
+
+        <br>
+        <br>
+
+    </section>
+
+    <section id="stopwatch_page" style="display: none;">
+
+        <h1>Stop Watch: </h1>
+
+        <div id="mainBlock">
+
+            <h1 id="stopwatch">00:00:00</h1>
+
+        </div>
+
+        <br>
+
+        <button onclick="start_stopwatch();">Start</button>
+
+        <button onclick="stop_stopwatch();">Stop</button>
+
+        <button onclick="reset_stopwatch();">Reset</button>
+
+    </section>
+
+    <br>
+    <br>
+    <br>
+    <span id="seperator"></span>
+
+
+    <section>
+        <h1>Pages: </h1>
+
+
+        <button onclick="switch_tab(this);">Clock</button>
+
+        <button onclick="switch_tab(this);">Alarm</button>
+
+        <button onclick="switch_tab(this);">Stop Watch</button>
+
+    </section>
+
+
+    <section id="snoozeAlarm" style="display: none;">
+
+        <br>
+        <button onclick="stop_alarm();" id="stopAlarm">Stop Alarm</button>
+
+    </section>
+
+</body>
+
+<script>
+    var api_url = "https://worldtimeapi.org/api/timezone";
+
+
+
+    var selected_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    var available_timezones = [Intl.DateTimeFormat().resolvedOptions().timeZone];
+
+    var alarm_times = [];
+
+    // alarm sound location
+
+
+
+    var alarm_sound = new Audio('./alarm.mp3');
+
+    alarm_sound.loop = true;
+
+    function stop_alarm() {
+
+        alarm_sound.pause();
+
+        alarm_sound.loop = true;
+
+        alarm_sound.currentTime = 0;
+
+        document.getElementById("snoozeAlarm").style.display = "none";
+
+        document.getElementsByClassName("snoozeAlarmSep")[0].style.display = "none";
+
+    };
+
+
+
+    function timezone_changed(Object) {
+
+        try { // Incase API returns an invalid timezone
+
+            selected_timezone = Object.value;
+
+            update_time();
+
+        } catch (E) {}
+
+    };
+
+
+
+    var stopwatch_values = {
+
+        "hours": 0,
+
+        "minutes": 0,
+
+        "seconds": 0
+
+    };
+
+    var stopwatch_intervals = [];
+
+
+
+    function update_stopwatch() {
+
+        var hours = stopwatch_values.hours.toString();
+
+        if (hours.length < 2) {
+
+            hours = "0" + hours;
+
+        };
+
+        var minutes = stopwatch_values.minutes.toString();
+
+        if (minutes.length < 2) {
+
+            minutes = "0" + minutes;
+
+        };
+
+        var seconds = stopwatch_values.seconds.toString();
+
+        if (seconds.length < 2) {
+
+            seconds = "0" + seconds;
+
+        };
+
+        document.getElementById("stopwatch").innerText = hours + ":" + minutes + ":" + seconds;
+
+    };
+
+
+
+    function set_alarm() {
+
+        alarm_times.push(document.getElementById("timeInput").value.toString());
+
+        document.getElementById("clearAlarmsButton").innerText = `Clear ${alarm_times.length} Alarm(s)`
+
+    };
+
+
+
+    function clear_alarms() {
+
+        alarm_times = [];
+
+        document.getElementById("clearAlarmsButton").innerText = `Clear ${alarm_times.length} Alarm(s)`
+
+    };
+
+
+
+    function start_stopwatch() {
+
+        if (stopwatch_intervals.length == 0) {
+
+            var stopwatch_seconds = setInterval(() => {
+
+                stopwatch_values["seconds"] = stopwatch_values["seconds"] + 1;
+
+                update_stopwatch()
+
+            }, 1000);
+
+            var stopwatch_minutes = setInterval(() => {
+
+                stopwatch_values["minutes"] = stopwatch_values["minutes"] + 1;
+
+                stopwatch_values["seconds"] = stopwatch_values["seconds"] - 60;
+
+                update_stopwatch()
+
+            }, 60000);
+
+            var stopwatch_hours = setInterval(() => {
+
+                stopwatch_values["hours"] = stopwatch_values["hours"] + 1;
+
+                stopwatch_values["minutes"] = stopwatch_values["minutes"] - 60;
+
+                update_stopwatch()
+
+            }, 3600000);
+
+            stopwatch_intervals.push(stopwatch_seconds);
+
+            stopwatch_intervals.push(stopwatch_minutes);
+
+            stopwatch_intervals.push(stopwatch_hours);
+
+        };
+
+    };
+
+
+
+    function stop_stopwatch() {
+
+        stopwatch_intervals.forEach((interval) => {
+
+            clearInterval(interval);
+
+        });
+
+        stopwatch_intervals = [];
+
+        update_stopwatch()
+
+    };
+
+
+
+    function reset_stopwatch() {
+
+        stop_stopwatch();
+
+        stopwatch_values = {
+
+            "hours": 0,
+
+            "minutes": 0,
+
+            "seconds": 0
+
+        };
+
+        update_stopwatch()
+
+    };
+
+
+
+    function update_selection() {
+
+        var select_html = `<option value="${selected_timezone}">${selected_timezone} [LOCAL]</option>`;
+
+        available_timezones.forEach((timezone) => {
+
+            if (timezone != selected_timezone) {
+
+                select_html = select_html + `<option value="${timezone}">${timezone}</option>`;
+
+            };
+
+        });
+
+        document.getElementById("timezoneChoice").innerHTML = select_html;
+
+    };
+
+
+
+    update_selection();
+
+    document.getElementById("timezoneChoice").value = selected_timezone;
+
+
+
+    fetch(api_url).then(R => {
+
+        R.json().then(Data => {
+
+            available_timezones = Data;
+
+            update_selection()
+
+        }).catch(E => {
+
+            location.reload();
+
+        });
+
+    }).catch(E => {
+
+        location.reload();
+
+    });
+
+
+
+    function switch_tab(Object) {
+
+        document.getElementById("clock_page").style.display = "none";
+
+        document.getElementById("alarm_page").style.display = "none";
+
+        document.getElementById("stopwatch_page").style.display = "none";
+
+        document.getElementById(Object.innerText.replaceAll(" ", "").toLowerCase() + "_page").style.display = "block";
+
+    };
+
+
+
+    function update_time() {
+
+        d = new Date(new Date().toLocaleString('en', {
+            timeZone: selected_timezone
+        }));
+
+        var hours = d.getHours();
+
+        if (hours.toString().length < 2) {
+
+            hours = "0" + hours.toString();
+
+        };
+
+        var minutes = d.getMinutes();
+
+        if (minutes.toString().length < 2) {
+
+            minutes = "0" + minutes.toString();
+
+        };
+
+        var seconds = d.getSeconds();
+
+        if (seconds.toString().length < 2) {
+
+            seconds = "0" + seconds.toString();
+
+        };
+
+        var time = hours + ":" + minutes + ":" + seconds;
+
+        if (seconds == "01") {
+
+            if (alarm_times.includes(hours + ":" + minutes)) {
+
+                alarm_sound.loop = true;
+
+                alarm_sound.play();
+
+                document.getElementById("snoozeAlarm").style.display = "block";
+
+                document.getElementsByClassName("snoozeAlarmSep")[0].style.display = "block";
+
+            };
+
+        };
+
+        document.getElementById("clock").innerText = time;
+
+    };
+
+
+
+    update_time();
+
+
+
+    setInterval(() => {
+
+        update_time();
+
+    }, 500);
+</script>
+
+</html>
