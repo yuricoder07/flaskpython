@@ -20,6 +20,10 @@ def page_not_found(e):
 def index():
     return render_template("index.html")
 
+@app.route('/time/')  # connects default URL to index() function
+def time():
+    return render_template("time.html")
+
 @app.route('/app/')  # connects /stub/ URL to stub() function
 def stub():
     return render_template("app.html")
