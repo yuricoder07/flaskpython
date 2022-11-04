@@ -1,5 +1,4 @@
 import random
-import requests
 
 quotes_data = []
 quote_list = [
@@ -45,6 +44,73 @@ quote_list = [
     "If you want to conquer fear, don't sit home and think about it. Go out and get busy."
 ]
 
-def timeZones():
-	req = requests.get("https://worldtimeapi.org/api/timezone")
-	return (req.text)
+def initQuotes():
+    item_id = 0
+    for item in quote_list:
+        quotes_data.append({"id": item_id, "quote": item, "helped": 0, "useless": 0})
+        item_id += 1
+    for i in range(10):
+        id = getRandomQuote()['id']
+        addQuoteHelp(id)
+    for i in range(5):
+        id = getRandomQuote()['id']
+        addQuoteUseless(id)
+
+def getQuotes():
+    return(quotes_data)
+
+def getQuote(id):
+    return(quotes_data[id])
+
+def getRandomQuote():
+    return(random.choice(quotes_data))
+
+def favoriteQuote():
+    best = 0
+    bestID = -1
+    for quote in getQuotes():
+        if quote['helped'] > best:
+            best = quote['helped']
+            bestID = quote['id']
+    return quotes_data[bestID]
+
+def jeeredQuote():
+    worst = 0
+    worstID = -1
+    for quote in getQuotes():
+        if quote['useless'] > best:
+            best = quote['useless']
+            bestID = quote['id']
+    return quotes_data[worstID]
+
+def addQuoteHelp(id):
+    quotes_data[id]['helped'] = quotes_data[id]['helped'] + 1
+    return quotes_data[id]['helped']
+
+def addQuoteUseless(id):
+    quotes_data[id]['useless'] = quotes_data[id]['useless'] + 1
+    return quotes_data[id]['useless']
+
+def printQuote(quote):
+    print(quote['id'], quote['quote'], "\n", "helped:", quote['helped'], "\n", "useless:", quote['useless'], "\n")
+
+def countQuotes():
+    return len(quotes_data)
+
+if __name__ == "__main__": 
+    initQuotes() 
+    
+    # Most likes and most jeered
+    best = favoriteQuote()
+    print("Most liked", best['helped'])
+    printQuote(best)
+    worst = jeeredQuote()
+    print("Most jeered", worst['useless'])
+    printQuote(worst)
+    
+    # Random joke
+    print("Random quote")
+    printQuote(getRandomQuote())
+    
+    # Count of Jokes
+    print("Quotes Count: " + str(countQuotes()))
