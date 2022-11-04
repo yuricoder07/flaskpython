@@ -20,7 +20,7 @@ def getTimezones():
 
 
 # building RESTapi resources/interfaces, these routes are added to Web Server
-api.add_resource(getTimezones(), 'api/jokes')
+api.add_resource(getTimezones(), '/api/jokes')
     
 if __name__ == "__main__": 
     # server = "http://127.0.0.1:5000" # run local
