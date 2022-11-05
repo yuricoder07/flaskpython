@@ -1,15 +1,18 @@
-FROM python:3
+FROM docker.io/python:3.9
 
-ENV PIP_ROOT_USER_ACTION=ignore
-COPY requirements.txt ./
+WORKDIR /app
+
+# --- [Install python and pip] ---
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y python3 python3-pip git
+
+COPY . /app
+
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install gunicorn
 
-WORKDIR /usr/src/app
-COPY . .
+ENV GUNICORN_CMD_ARGS="--workers=1 --bind=0.0.0.0:8080"
 
-RUN pip install gunicorn
+EXPOSE 8080
 
-CMD [ "gunicorn", \
-    "--workers", "1", \
-    "--bind", "0.0.0.0:8058", \
-    "teambrobro:app" ]
+CMD [ "gunicorn", "main:app" ]
